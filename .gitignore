@@ -1,0 +1,14 @@
+/node_modules
+/lab
+/coverage
+package-lock.json
+.etherlime-store/.history.json
+/build/BasicToken.json
+/build/ERC20.json
+/build/ERC20Basic.json
+/build/MintableToken.json
+/build/SafeMath.json
+/build/StandardToken.json
+/build/Ownable.json
+.idea/
+.DS_Store
