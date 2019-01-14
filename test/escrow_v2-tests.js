@@ -100,6 +100,39 @@ describe('Escrow Contract', function () {
             await validateAfterFund(signerBalanceBeforeFund, tx);
         });
 
+        it('Should process 1000 fiat payments and refund correctly', async () => {
+            await tokenContract.contract.transfer(escrowContract.contractAddress, tokensToSend.mul(1010));
+            await deployer.wallet.sendTransaction({
+                to: escrowContract.contractAddress,
+                value: weiToSend.mul(1010)
+            });
+            
+            let signerBalanceBeforeFund = await deployer.provider.getBalance(deployer.wallet.address);
+            
+            for(i = 0; i < 500; i++){
+                nonce = await utils.generateRandomNonce();
+                signedFiatPaymentFunds = await utils.getSignedFundMessage(signer.wallet, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
+                tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
+            }
+
+            for(i = 0; i < 500; i++){
+                recipient = await ethers.Wallet.createRandom();
+                nonce = await utils.generateRandomNonce();
+                signedFiatPaymentFunds = await utils.getSignedFundMessage(signer.wallet, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
+                tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
+            }
+
+            let signerBalanceAfterFund = await deployer.provider.getBalance(deployer.wallet.address);
+
+            assert.closeTo(
+                250000,
+                Number(signerBalanceAfterFund.sub(signerBalanceBeforeFund).div(gasPrice).toString()),
+                750000,
+                'Incorrect wei balance'
+            );
+        }).timeout(5000000);
+
+
         async function validateAfterFund(signerBalanceBeforeFund, fundTx) {
             const signerBalanceAfterFund = await deployer.provider.getBalance(signer.wallet.address);
 
@@ -162,6 +195,40 @@ describe('Escrow Contract', function () {
 
             await utils.expectThrow(
                 escrowSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend.mul(3), signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice }),
+            );
+        });
+    });
+
+    describe('Fund without funds', () => {
+        const addSigner = true;
+        let signedFiatPaymentFunds;
+        let nonce = utils.generateRandomNonce();
+
+        beforeEach(async () => {
+            await initEscrowContract();
+            await escrowDappAdminExecutor.editSigner(signer.wallet.address, addSigner);
+            recipient = ethers.Wallet.createRandom();
+            signedFiatPaymentFunds = await utils.getSignedFundMessage(signer.wallet, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
+        });
+
+        it('[NEGATIVE] Shouldn\'t fund with tokens and without ethers', async () => {
+            await tokenContract.contract.transfer(escrowContract.contractAddress, tokensToSend.mul(2));
+
+            await utils.expectThrow(
+                escrowSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice }),
+                'revert'
+            );
+        });
+
+        it('[NEGATIVE] Shouldn\'t fund with ethers and without tokens', async () => {
+            await deployer.wallet.sendTransaction({
+                to: escrowContract.contractAddress,
+                value: weiToSend.mul(2)
+            });
+
+            await utils.expectThrow(
+                escrowSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice }),
+                'revert'
             );
         });
     });
@@ -244,7 +311,7 @@ describe('Escrow Contract', function () {
             const dAppAdminBalanceAfterWithdraw = await tokenContract.contract.balanceOf(dAppAdmin.wallet.address);
 
             assert(dAppAdminBalanceBeforeWithdraw.add(tokensToSend).eq(dAppAdminBalanceAfterWithdraw), 'Incorrect withdrawn tokens amount');
-        });
+        }).timeout(75000);
 
         it('[NEGATIVE] Non-dAppAdmin should not be able to withdraw ethers', async () => {
             const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.wallet);
