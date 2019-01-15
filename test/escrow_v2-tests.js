@@ -343,4 +343,28 @@ describe('Escrow Contract', function () {
             );
         });
     });
+
+    describe('DAppAdmin functionality', () => {
+
+        beforeEach(async () => {
+            await initEscrowContract();
+
+            newDAppAdmin = ethers.Wallet.createRandom();
+            nonSigner.wallet = nonSigner.wallet.connect(deployer.provider);
+        });
+
+        it('Only dAppAdmin should be able to set a new dAppAdmin', async () => {
+            await escrowDappAdminExecutor.editDappAdmin(newDAppAdmin.address);
+
+            let newDAppAdminAddress = await escrowDappAdminExecutor.dAppAdmin()
+
+            assert(newDAppAdmin.address == newDAppAdminAddress, "dApp admin hasn't been changed")
+        });
+
+        it('Non dAppAdmin shouldn\'t be able to set a new dAppAdmin', async () => {
+            await utils.expectThrow(
+                escrowSignerExecutor.editDappAdmin(newDAppAdmin.address)
+            );
+        });
+    });
 });
