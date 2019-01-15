@@ -62,7 +62,7 @@ describe('Escrow Contract', function () {
         let signedFiatPaymentFunds;
         let signedRelayedPaymentFunds;
 
-        const nonce = utils.generateRandomNonce();
+        let nonce = utils.generateRandomNonce();
 
         beforeEach(async () => {
             await initEscrowContract();
@@ -100,7 +100,7 @@ describe('Escrow Contract', function () {
             await validateAfterFund(signerBalanceBeforeFund, tx);
         });
 
-        it('Should process 1000 fiat payments and refund correctly', async () => {
+        it.only('Should process 1000 fiat payments and refund correctly', async () => {
             await tokenContract.contract.transfer(escrowContract.contractAddress, tokensToSend.mul(1010));
             await deployer.wallet.sendTransaction({
                 to: escrowContract.contractAddress,
@@ -109,14 +109,10 @@ describe('Escrow Contract', function () {
             
             let signerBalanceBeforeFund = await deployer.provider.getBalance(deployer.wallet.address);
             
-            for(i = 0; i < 500; i++){
-                nonce = await utils.generateRandomNonce();
-                signedFiatPaymentFunds = await utils.getSignedFundMessage(signer.wallet, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
-                tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
-            }
-
-            for(i = 0; i < 500; i++){
-                recipient = await ethers.Wallet.createRandom();
+            for(i = 0; i < 1000; i++){
+                if(i % 2 == 0){
+                    recipient = await ethers.Wallet.createRandom();
+                }
                 nonce = await utils.generateRandomNonce();
                 signedFiatPaymentFunds = await utils.getSignedFundMessage(signer.wallet, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
                 tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
