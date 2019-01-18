@@ -100,7 +100,7 @@ describe('Escrow Contract', function () {
             await validateAfterFund(signerBalanceBeforeFund, tx);
         });
 
-        it.only('Should process 1000 fiat payments and refund correctly', async () => {
+        it('Should process 1000 fiat payments and refund correctly', async () => {
             await tokenContract.contract.transfer(escrowContract.contractAddress, tokensToSend.mul(1010));
             await deployer.wallet.sendTransaction({
                 to: escrowContract.contractAddress,
