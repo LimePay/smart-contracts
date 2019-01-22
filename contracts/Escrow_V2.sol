@@ -88,5 +88,9 @@ contract Escrow_V2 {
         signers[_newSigner] = add;
     }
 
+    function editDappAdmin (address payable _dAppAdmin) public onlyDAppAdmin {
+        dAppAdmin = _dAppAdmin;
+    }
+
     function() external payable {}
 }

@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "bignumber.js": "7.2.1",
-    "etherlime": "0.10.4",
+    "etherlime": "^0.10.5",
     "ethers": "4.0.17",
     "openzeppelin-solidity": "2.1.1",
     "solc": "0.5.1"
