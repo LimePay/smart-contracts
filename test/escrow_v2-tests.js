@@ -107,7 +107,7 @@ describe('Escrow Contract', function () {
                 value: weiToSend.mul(1010)
             });
             
-            let signerBalanceBeforeFund = await deployer.provider.getBalance(deployer.wallet.address);
+            let senderBalanceBeforeFund = await deployer.provider.getBalance(deployer.wallet.address);
             
             for(i = 0; i < 1000; i++){
                 if(i % 2 == 0){
@@ -118,11 +118,11 @@ describe('Escrow Contract', function () {
                 tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
             }
 
-            let signerBalanceAfterFund = await deployer.provider.getBalance(deployer.wallet.address);
+            let senderBalanceAfterFund = await deployer.provider.getBalance(deployer.wallet.address);
 
             assert.closeTo(
                 250000,
-                Number(signerBalanceAfterFund.sub(signerBalanceBeforeFund).div(gasPrice).toString()),
+                Number(senderBalanceAfterFund.sub(senderBalanceBeforeFund).div(gasPrice).toString()),
                 750000,
                 'Incorrect wei balance'
             );
@@ -349,7 +349,7 @@ describe('Escrow Contract', function () {
             nonSigner.wallet = nonSigner.wallet.connect(deployer.provider);
         });
 
-        it('Only dAppAdmin should be able to set a new dAppAdmin', async () => {
+        it('dAppAdmin should be able to set a new dAppAdmin', async () => {
             await escrowDappAdminExecutor.editDappAdmin(newDAppAdmin.address);
 
             let newDAppAdminAddress = await escrowDappAdminExecutor.dAppAdmin()
