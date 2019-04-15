@@ -1,9 +1,9 @@
 pragma solidity 0.5.1;
 
-import "./../node_modules/openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "./../node_modules/openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
-contract Token is ERC20, ERC20Detailed {
+contract Mock_Token is ERC20, ERC20Detailed {
     uint256 public constant INITIAL_SUPPLY = 100000 * (10 ** uint256(18));
 
     constructor() public ERC20Detailed("LimePay Token", "LP", 18) {
