@@ -10,7 +10,7 @@ const EscrowContract = require('./../build/Escrow_V2.json');
 
 describe('Escrow Contract', function () {
     this.timeout(5000);
-    let signer = accounts[3];
+    let dAppSigner = accounts[3];
     let nonSigner = accounts[4];
 
     let dAppAdmin = accounts[5];
@@ -29,7 +29,7 @@ describe('Escrow Contract', function () {
     let escrowContract;
 
     async function initEscrowContract() {
-        deployer = new etherlime.EtherlimeGanacheDeployer(dAppAdmin.wallet.privateKey);
+        deployer = new etherlime.EtherlimeGanacheDeployer(dAppAdmin.signer.privateKey);
         deployer.defaultOverrides = {
             gasLimit: 4700000
         }
@@ -38,17 +38,17 @@ describe('Escrow Contract', function () {
 
         const ecToolContract = await deployer.deploy(ECTools);
 
-        escrowContract = await deployer.deploy(EscrowContract, { ECTools: ecToolContract.contractAddress }, tokenContract.contractAddress, dAppAdmin.wallet.address);
+        escrowContract = await deployer.deploy(EscrowContract, { ECTools: ecToolContract.contractAddress }, tokenContract.contractAddress, dAppAdmin.signer.address);
 
-        dAppAdmin.wallet = dAppAdmin.wallet.connect(deployer.provider);
-        signer.wallet = signer.wallet.connect(deployer.provider);
+        dAppAdmin.signer = dAppAdmin.signer.connect(deployer.provider);
+        dAppSigner.signer = dAppSigner.signer.connect(deployer.provider);
 
-        escrowDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, dAppAdmin.wallet);
-        escrowSignerExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, signer.wallet);
+        escrowDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, dAppAdmin.signer);
+        escrowSignerExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, dAppSigner.signer);
     }
 
     async function setupEscrowContract() {
-        await deployer.wallet.sendTransaction({
+        await deployer.signer.sendTransaction({
             to: escrowContract.contractAddress,
             value: weiToSend.mul(2)
         });
@@ -69,16 +69,16 @@ describe('Escrow Contract', function () {
 
             await setupEscrowContract();
 
-            await escrowDappAdminExecutor.editSigner(signer.wallet.address, addSigner);
+            await escrowDappAdminExecutor.editSigner(dAppSigner.signer.address, addSigner);
 
             recipient = ethers.Wallet.createRandom();
 
-            signedFiatPaymentFunds = await utils.getSignedFundMessage(signer.wallet, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
-            signedRelayedPaymentFunds = await utils.getSignedFundMessage(signer.wallet, ['uint256', 'address', 'address', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, weiToSend]);
+            signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
+            signedRelayedPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'address', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, weiToSend]);
         });
 
         it('Should process fiat payment funding correctly', async () => {
-            const signerBalanceBeforeFund = await deployer.provider.getBalance(signer.wallet.address);
+            const signerBalanceBeforeFund = await deployer.provider.getBalance(dAppSigner.signer.address);
             const escrowTokenBalanceBeforeFund = await tokenContract.contract.balanceOf(escrowContract.contractAddress);
 
             let tx = await escrowSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
@@ -93,7 +93,7 @@ describe('Escrow Contract', function () {
         });
 
         it('Should process relayed payment funding correctly', async () => {
-            const signerBalanceBeforeFund = await deployer.provider.getBalance(signer.wallet.address);
+            const signerBalanceBeforeFund = await deployer.provider.getBalance(dAppSigner.signer.address);
 
             let tx = await escrowSignerExecutor.fundForRelayedPayment(nonce, recipient.address, weiToSend, signedRelayedPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
 
@@ -102,23 +102,23 @@ describe('Escrow Contract', function () {
 
         it('Should process 1000 fiat payments and refund correctly', async () => {
             await tokenContract.contract.transfer(escrowContract.contractAddress, tokensToSend.mul(1010));
-            await deployer.wallet.sendTransaction({
+            await deployer.signer.sendTransaction({
                 to: escrowContract.contractAddress,
                 value: weiToSend.mul(1010)
             });
             
-            let senderBalanceBeforeFund = await deployer.provider.getBalance(deployer.wallet.address);
+            let senderBalanceBeforeFund = await deployer.provider.getBalance(deployer.signer.address);
             
             for(i = 0; i < 1000; i++){
                 if(i % 2 == 0){
                     recipient = await ethers.Wallet.createRandom();
                 }
                 nonce = await utils.generateRandomNonce();
-                signedFiatPaymentFunds = await utils.getSignedFundMessage(signer.wallet, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
+                signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
                 tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
             }
 
-            let senderBalanceAfterFund = await deployer.provider.getBalance(deployer.wallet.address);
+            let senderBalanceAfterFund = await deployer.provider.getBalance(deployer.signer.address);
 
             assert.closeTo(
                 250000,
@@ -130,7 +130,7 @@ describe('Escrow Contract', function () {
 
 
         async function validateAfterFund(signerBalanceBeforeFund, fundTx) {
-            const signerBalanceAfterFund = await deployer.provider.getBalance(signer.wallet.address);
+            const signerBalanceAfterFund = await deployer.provider.getBalance(dAppSigner.signer.address);
 
             assert(signerBalanceAfterFund.gte(signerBalanceBeforeFund), 'Incorrect signer wei balance');
             assert.closeTo(0, Number(signerBalanceAfterFund.sub(signerBalanceBeforeFund).div(gasPrice).toString()), 3500, 'Refund amount is outside the range');
@@ -165,11 +165,11 @@ describe('Escrow Contract', function () {
         });
 
         it('[NEGATIVE] Fund should not be executed from non-signer address', async () => {
-            nonSigner.wallet = nonSigner.wallet.connect(deployer.provider);
-            const escrowNonSignerExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonSigner.wallet);
+            nonSigner.signer = nonSigner.signer.connect(deployer.provider);
+            const escrowNonSignerExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonSigner.signer);
 
-            const authorizationFiatFundSignature = await utils.getSignedFundMessage(nonSigner.wallet, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
-            const authorizationRelayedFundSignature = await utils.getSignedFundMessage(nonSigner.wallet, ['uint256', 'address', 'address', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, weiToSend]);
+            const authorizationFiatFundSignature = await utils.getSignedFundMessage(nonSigner.signer, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
+            const authorizationRelayedFundSignature = await utils.getSignedFundMessage(nonSigner.signer, ['uint256', 'address', 'address', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, weiToSend]);
 
             await utils.expectThrow(
                 escrowNonSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, authorizationFiatFundSignature,
@@ -202,9 +202,9 @@ describe('Escrow Contract', function () {
 
         beforeEach(async () => {
             await initEscrowContract();
-            await escrowDappAdminExecutor.editSigner(signer.wallet.address, addSigner);
+            await escrowDappAdminExecutor.editSigner(dAppSigner.signer.address, addSigner);
             recipient = ethers.Wallet.createRandom();
-            signedFiatPaymentFunds = await utils.getSignedFundMessage(signer.wallet, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
+            signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
         });
 
         it('[NEGATIVE] Shouldn\'t fund with tokens and without ethers', async () => {
@@ -217,7 +217,7 @@ describe('Escrow Contract', function () {
         });
 
         it('[NEGATIVE] Shouldn\'t fund with ethers and without tokens', async () => {
-            await deployer.wallet.sendTransaction({
+            await deployer.signer.sendTransaction({
                 to: escrowContract.contractAddress,
                 value: weiToSend.mul(2)
             });
@@ -242,7 +242,7 @@ describe('Escrow Contract', function () {
             newSigner = ethers.Wallet.createRandom();
             newSigner = newSigner.connect(deployer.provider);
 
-            nonDappAdmin.wallet = nonDappAdmin.wallet.connect(deployer.provider);
+            nonDappAdmin.signer = nonDappAdmin.signer.connect(deployer.provider);
         });
 
 
@@ -262,14 +262,14 @@ describe('Escrow Contract', function () {
         it('Should get signer address from valid signed message ', async () => {
             const authorizationHash = ethers.utils.solidityKeccak256(['uint256'], [10]);
             const authorizationHashBytes = ethers.utils.arrayify(authorizationHash);
-            const authorizationSignature = await signer.wallet.signMessage(authorizationHashBytes);
+            const authorizationSignature = await dAppSigner.signer.signMessage(authorizationHashBytes);
 
             const messageSigner = await escrowContract.contract.getSigner(authorizationHash, authorizationSignature);
-            assert(messageSigner == signer.wallet.address, 'Invalid signer');
+            assert(messageSigner == dAppSigner.signer.address, 'Invalid signer');
         });
 
         it('[NEGATIVE] Non-dAppAdmin address should not be able to add or remove another signers privilege', async () => {
-            const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.wallet);
+            const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.signer);
 
             await utils.expectThrow(
                 escrowNonDappAdminExecutor.editSigner(newSigner.address, addSigner, { gasLimit: gasLimit }),
@@ -290,27 +290,27 @@ describe('Escrow Contract', function () {
             await setupEscrowContract();
 
             recipient = ethers.Wallet.createRandom();
-            nonSigner.wallet = nonSigner.wallet.connect(deployer.provider);
+            nonSigner.signer = nonSigner.signer.connect(deployer.provider);
         });
 
         it('dAppAdmin should be able to withdraw ethers', async () => {
-            const dAppAdminBalanceBeforeWithdraw = await deployer.provider.getBalance(dAppAdmin.wallet.address);
+            const dAppAdminBalanceBeforeWithdraw = await deployer.provider.getBalance(dAppAdmin.signer.address);
             let gasCost = await utils.getGasCostFromTx(escrowDappAdminExecutor.withdrawEthers(weiToSend, { gasLimit: gasLimit }), deployer.provider);
-            const dAppAdminBalanceAfterWithdraw = await deployer.provider.getBalance(dAppAdmin.wallet.address);
+            const dAppAdminBalanceAfterWithdraw = await deployer.provider.getBalance(dAppAdmin.signer.address);
 
             assert(dAppAdminBalanceAfterWithdraw.eq(dAppAdminBalanceBeforeWithdraw.add(weiToSend).sub(gasCost)), 'Incorrect withdrawn ethers amount');
         });
 
         it('dAppAdmin should be able to withdraw tokens', async () => {
-            const dAppAdminBalanceBeforeWithdraw = await tokenContract.contract.balanceOf(dAppAdmin.wallet.address);
+            const dAppAdminBalanceBeforeWithdraw = await tokenContract.contract.balanceOf(dAppAdmin.signer.address);
             await escrowDappAdminExecutor.withdrawTokens(tokensToSend, { gasLimit: gasLimit });
-            const dAppAdminBalanceAfterWithdraw = await tokenContract.contract.balanceOf(dAppAdmin.wallet.address);
+            const dAppAdminBalanceAfterWithdraw = await tokenContract.contract.balanceOf(dAppAdmin.signer.address);
 
             assert(dAppAdminBalanceBeforeWithdraw.add(tokensToSend).eq(dAppAdminBalanceAfterWithdraw), 'Incorrect withdrawn tokens amount');
         }).timeout(75000);
 
         it('[NEGATIVE] Non-dAppAdmin should not be able to withdraw ethers', async () => {
-            const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.wallet);
+            const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.signer);
 
             await utils.expectThrow(
                 escrowNonDappAdminExecutor.withdrawEthers(weiToSend, { gasLimit: gasLimit }),
@@ -319,7 +319,7 @@ describe('Escrow Contract', function () {
         });
 
         it('[NEGATIVE] Non-dAppAdmin should not be able to withdraw tokens', async () => {
-            const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.wallet);
+            const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.signer);
 
             await utils.expectThrow(
                 escrowNonDappAdminExecutor.withdrawTokens(tokensToSend, { gasLimit: gasLimit }),
@@ -346,7 +346,7 @@ describe('Escrow Contract', function () {
             await initEscrowContract();
 
             newDAppAdmin = ethers.Wallet.createRandom();
-            nonSigner.wallet = nonSigner.wallet.connect(deployer.provider);
+            nonSigner.signer = nonSigner.signer.connect(deployer.provider);
         });
 
         it('dAppAdmin should be able to set a new dAppAdmin', async () => {
