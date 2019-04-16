@@ -2,13 +2,17 @@ const ethers = require('ethers');
 const etherlime = require('etherlime');
 
 const utils = require('./util');
-const Token = require('./../build/Mock_Token.json');
+const Token = require('./../build/Token.json');
 const ECTools = require('./../build/ECTools.json');
-const EscrowContract = require('./../build/Escrow_V2.json');
+const EscrowContract = require('./../build/Escrow_V3.json');
 
-// TODO More tests must be implemented for the full coverage of the functionality and testing corner cases
+const GAS_PRICE = 20000000000; // 20 gwei
+const GAS_LIMIT = 200000;
 
-describe('Escrow Contract V2', function () {
+const EXCESS_GAS_REFUND_UPPER_LIMIT = 3500; // The upper limit of exceeding gas that can be refunded and we will count the refund successfull
+const NUMBER_OF_TRANSACTIONS = 500; // Number of transactions that will be perfomed for the refund test
+
+describe('Escrow Contract', function () {
     this.timeout(5000);
     let dAppSigner = accounts[3];
     let nonSigner = accounts[4];
@@ -18,8 +22,6 @@ describe('Escrow Contract V2', function () {
 
     const tokensToSend = ethers.utils.bigNumberify('1000000000'); // 0.000000001 tokens
     const weiToSend = ethers.utils.bigNumberify('1000000000000000000'); // 1 ether
-    const gasPrice = 20000000000; // 20 gwei
-    const gasLimit = 200000;
 
     let deployer;
     let recipient;
@@ -73,15 +75,15 @@ describe('Escrow Contract V2', function () {
 
             recipient = ethers.Wallet.createRandom();
 
-            signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
-            signedRelayedPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'address', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, weiToSend]);
+            signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'uint256', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend, tokensToSend]);
+            signedRelayedPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'uint256', 'address', 'uint256'], [nonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend]);
         });
 
         it('Should process fiat payment funding correctly', async () => {
             const signerBalanceBeforeFund = await deployer.provider.getBalance(dAppSigner.signer.address);
             const escrowTokenBalanceBeforeFund = await tokenContract.contract.balanceOf(escrowContract.contractAddress);
 
-            let tx = await escrowSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
+            let tx = await escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
 
             await validateAfterFund(signerBalanceBeforeFund, tx);
 
@@ -93,47 +95,76 @@ describe('Escrow Contract V2', function () {
         });
 
         it('Should process relayed payment funding correctly', async () => {
-            const signerBalanceBeforeFund = await deployer.provider.getBalance(dAppSigner.signer.address);
+            const msgSenderBalanceBeforeFund = await deployer.provider.getBalance(dAppSigner.signer.address);
 
-            let tx = await escrowSignerExecutor.fundForRelayedPayment(nonce, recipient.address, weiToSend, signedRelayedPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
+            let tx = await escrowSignerExecutor.fundForRelayedPayment(nonce, GAS_PRICE, recipient.address, weiToSend, signedRelayedPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
 
-            await validateAfterFund(signerBalanceBeforeFund, tx);
-        });
+            await validateAfterFund(msgSenderBalanceBeforeFund, tx);
+        }).timeout(100000);
 
-        it('Should process 1000 fiat payments and refund correctly', async () => {
+        it('Should process 500 fiat payments and refund correctly', async () => {
             await tokenContract.contract.transfer(escrowContract.contractAddress, tokensToSend.mul(1010));
             await deployer.signer.sendTransaction({
                 to: escrowContract.contractAddress,
                 value: weiToSend.mul(1010)
             });
-            
+
             let senderBalanceBeforeFund = await deployer.provider.getBalance(deployer.signer.address);
-            
-            for(i = 0; i < 1000; i++){
-                if(i % 2 == 0){
+
+            for (i = 0; i < NUMBER_OF_TRANSACTIONS; i++) {
+                if (i % 2 == 0) {
                     recipient = await ethers.Wallet.createRandom();
                 }
                 nonce = await utils.generateRandomNonce();
-                signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
-                tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
+                signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'uint256', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend, tokensToSend]);
+                tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
             }
 
             let senderBalanceAfterFund = await deployer.provider.getBalance(deployer.signer.address);
+            const excessGasRefunded = Number(senderBalanceAfterFund.sub(senderBalanceBeforeFund).div(GAS_PRICE).toString());
 
-            assert.closeTo(
-                250000,
-                Number(senderBalanceAfterFund.sub(senderBalanceBeforeFund).div(gasPrice).toString()),
-                750000,
-                'Incorrect wei balance'
-            );
+            assert.closeTo(0, excessGasRefunded, NUMBER_OF_TRANSACTIONS * EXCESS_GAS_REFUND_UPPER_LIMIT, 'Incorrect wei balance');
         }).timeout(5000000);
 
+        it('Should process 500 relayed payments and refund correctly', async () => {
+            await tokenContract.contract.transfer(escrowContract.contractAddress, tokensToSend.mul(1010));
+            await deployer.signer.sendTransaction({
+                to: escrowContract.contractAddress,
+                value: weiToSend.mul(1010)
+            });
 
-        async function validateAfterFund(signerBalanceBeforeFund, fundTx) {
-            const signerBalanceAfterFund = await deployer.provider.getBalance(dAppSigner.signer.address);
+            const senderBalanceBeforeFund = await deployer.provider.getBalance(deployer.signer.address);
 
-            assert(signerBalanceAfterFund.gte(signerBalanceBeforeFund), 'Incorrect signer wei balance');
-            assert.closeTo(0, Number(signerBalanceAfterFund.sub(signerBalanceBeforeFund).div(gasPrice).toString()), 3500, 'Refund amount is outside the range');
+            const transactions = [];
+            for (i = 0; i < NUMBER_OF_TRANSACTIONS; i++) {
+                if (i % 2 == 0) {
+                    recipient = await ethers.Wallet.createRandom();
+                }
+                let currentNonce = await utils.generateRandomNonce();
+
+                let signedFiatPaymentFunds = await utils.getSignedFundMessage(
+                    dAppSigner.signer,
+                    ['uint256', 'address', 'uint256', 'address', 'uint256'],
+                    [currentNonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend]);
+
+                tx = await escrowDappAdminExecutor.fundForRelayedPayment(currentNonce, GAS_PRICE, recipient.address, weiToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
+                const result = await tx.wait();
+                transactions.push(result);
+            }
+
+            const senderBalanceAfterFund = await deployer.provider.getBalance(deployer.signer.address);
+            assert(senderBalanceAfterFund.gte(senderBalanceBeforeFund), 'Incorrect sender wei balance');
+
+            const excessGasRefunded = Number(senderBalanceAfterFund.sub(senderBalanceBeforeFund).div(GAS_PRICE).toString());
+            assert.closeTo(0, excessGasRefunded, NUMBER_OF_TRANSACTIONS * EXCESS_GAS_REFUND_UPPER_LIMIT, 'Incorrect wei balance');
+
+        }).timeout(5000000);
+
+        async function validateAfterFund(msgsenderBalanceBeforeFund, fundTx) {
+            const msgSenderBalanceAfterFund = await deployer.provider.getBalance(dAppSigner.signer.address);
+
+            assert(msgSenderBalanceAfterFund.gte(msgsenderBalanceBeforeFund), 'Incorrect sender wei balance');
+            assert.closeTo(0, Number(msgSenderBalanceAfterFund.sub(msgsenderBalanceBeforeFund).div(GAS_PRICE).toString()), EXCESS_GAS_REFUND_UPPER_LIMIT, 'Refund amount is outside the range');
 
             const escrowWeiBalance = await deployer.provider.getBalance(escrowContract.contractAddress);
 
@@ -142,24 +173,20 @@ describe('Escrow Contract V2', function () {
             const txGasCost = gasUsed.mul(fundTx.gasPrice);
             const expectedEscrowWeiBalance = weiToSend.sub(txGasCost.toString());
 
-            assert.closeTo(
-                0,
-                Number(expectedEscrowWeiBalance.sub(escrowWeiBalance).div(gasPrice).toString()),
-                3500,
-                'Incorrect wei balance remaining in the contract'
-            );
+            const excessGasRefunded = Number(expectedEscrowWeiBalance.sub(escrowWeiBalance).div(GAS_PRICE).toString());
+            assert.closeTo(0, excessGasRefunded, EXCESS_GAS_REFUND_UPPER_LIMIT, 'Incorrect wei balance remaining in the contract');
 
             const recipientWeiBalance = await deployer.provider.getBalance(recipient.address);
             assert(recipientWeiBalance.eq(weiToSend), 'Incorrect wei balance remaining in the recipient');
         }
 
         it('[NEGATIVE] Fund should not be executed if a nonce already exists', async () => {
-            await escrowSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice });
+            await escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
 
             assert(await escrowContract.contract.usedNonces(nonce), 'Nonce is not marked as used');
 
             await utils.expectThrow(
-                escrowSignerExecutor.fundForRelayedPayment(nonce, recipient.address, weiToSend, signedRelayedPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice }),
+                escrowSignerExecutor.fundForRelayedPayment(nonce, GAS_PRICE, recipient.address, weiToSend, signedRelayedPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE }),
                 'Nonce already used'
             );
         });
@@ -168,19 +195,19 @@ describe('Escrow Contract V2', function () {
             nonSigner.signer = nonSigner.signer.connect(deployer.provider);
             const escrowNonSignerExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonSigner.signer);
 
-            const authorizationFiatFundSignature = await utils.getSignedFundMessage(nonSigner.signer, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
-            const authorizationRelayedFundSignature = await utils.getSignedFundMessage(nonSigner.signer, ['uint256', 'address', 'address', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, weiToSend]);
+            const authorizationFiatFundSignature = await utils.getSignedFundMessage(nonSigner.signer, ['uint256', 'address', 'uint256', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend, tokensToSend]);
+            const authorizationRelayedFundSignature = await utils.getSignedFundMessage(nonSigner.signer, ['uint256', 'address', 'uint256', 'address', 'uint256'], [nonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend]);
 
             await utils.expectThrow(
-                escrowNonSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, authorizationFiatFundSignature,
-                    { gasLimit: gasLimit, gasPrice: gasPrice }
+                escrowNonSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, authorizationFiatFundSignature,
+                    { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE }
                 ),
                 'Invalid authorization signature or signer'
             );
 
             await utils.expectThrow(
-                escrowNonSignerExecutor.fundForRelayedPayment(nonce, recipient.address, weiToSend, authorizationRelayedFundSignature,
-                    { gasLimit: gasLimit, gasPrice: gasPrice }
+                escrowNonSignerExecutor.fundForRelayedPayment(nonce, GAS_PRICE, recipient.address, weiToSend, authorizationRelayedFundSignature,
+                    { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE }
                 ),
                 'Invalid authorization signature or signer'
             );
@@ -190,7 +217,7 @@ describe('Escrow Contract V2', function () {
 
 
             await utils.expectThrow(
-                escrowSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend.mul(3), signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice }),
+                escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend.mul(3), tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE }),
             );
         });
     });
@@ -204,14 +231,14 @@ describe('Escrow Contract V2', function () {
             await initEscrowContract();
             await escrowDappAdminExecutor.editSigner(dAppSigner.signer.address, addSigner);
             recipient = ethers.Wallet.createRandom();
-            signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, recipient.address, tokensToSend, weiToSend]);
+            signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'uint256', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend, tokensToSend]);
         });
 
         it('[NEGATIVE] Shouldn\'t fund with tokens and without ethers', async () => {
             await tokenContract.contract.transfer(escrowContract.contractAddress, tokensToSend.mul(2));
 
             await utils.expectThrow(
-                escrowSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice }),
+                escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE }),
                 'revert'
             );
         });
@@ -223,7 +250,7 @@ describe('Escrow Contract V2', function () {
             });
 
             await utils.expectThrow(
-                escrowSignerExecutor.fundForFiatPayment(nonce, recipient.address, tokensToSend, weiToSend, signedFiatPaymentFunds, { gasLimit: gasLimit, gasPrice: gasPrice }),
+                escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE }),
                 'revert'
             );
         });
@@ -247,15 +274,15 @@ describe('Escrow Contract V2', function () {
 
 
         it('dAppAdmin should be able to make other addresses signers', async () => {
-            await escrowDappAdminExecutor.editSigner(newSigner.address, addSigner, { gasLimit: gasLimit });
+            await escrowDappAdminExecutor.editSigner(newSigner.address, addSigner, { gasLimit: GAS_LIMIT });
             assert(await escrowDappAdminExecutor.signers(newSigner.address), 'New signer is not added');
         });
 
         it('dAppAdmin should be able to remove signer privilege from other addresses', async () => {
-            await escrowDappAdminExecutor.editSigner(newSigner.address, addSigner, { gasLimit: gasLimit });
+            await escrowDappAdminExecutor.editSigner(newSigner.address, addSigner, { gasLimit: GAS_LIMIT });
             assert(await escrowDappAdminExecutor.signers(newSigner.address), 'New signer is not added');
 
-            await escrowDappAdminExecutor.editSigner(newSigner.address, removeSigner, { gasLimit: gasLimit });
+            await escrowDappAdminExecutor.editSigner(newSigner.address, removeSigner, { gasLimit: GAS_LIMIT });
             assert(!await escrowDappAdminExecutor.signers(newSigner.address), 'Added signer has not been removed');
         });
 
@@ -272,12 +299,12 @@ describe('Escrow Contract V2', function () {
             const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.signer);
 
             await utils.expectThrow(
-                escrowNonDappAdminExecutor.editSigner(newSigner.address, addSigner, { gasLimit: gasLimit }),
+                escrowNonDappAdminExecutor.editSigner(newSigner.address, addSigner, { gasLimit: GAS_LIMIT }),
                 'Unauthorized access'
             );
 
             await utils.expectThrow(
-                escrowNonDappAdminExecutor.editSigner(newSigner.address, removeSigner, { gasLimit: gasLimit }),
+                escrowNonDappAdminExecutor.editSigner(newSigner.address, removeSigner, { gasLimit: GAS_LIMIT }),
                 'Unauthorized access'
             );
         });
@@ -295,7 +322,7 @@ describe('Escrow Contract V2', function () {
 
         it('dAppAdmin should be able to withdraw ethers', async () => {
             const dAppAdminBalanceBeforeWithdraw = await deployer.provider.getBalance(dAppAdmin.signer.address);
-            let gasCost = await utils.getGasCostFromTx(escrowDappAdminExecutor.withdrawEthers(weiToSend, { gasLimit: gasLimit }), deployer.provider);
+            let gasCost = await utils.getGasCostFromTx(escrowDappAdminExecutor.withdrawEthers(weiToSend, { gasLimit: GAS_LIMIT }), deployer.provider);
             const dAppAdminBalanceAfterWithdraw = await deployer.provider.getBalance(dAppAdmin.signer.address);
 
             assert(dAppAdminBalanceAfterWithdraw.eq(dAppAdminBalanceBeforeWithdraw.add(weiToSend).sub(gasCost)), 'Incorrect withdrawn ethers amount');
@@ -303,7 +330,7 @@ describe('Escrow Contract V2', function () {
 
         it('dAppAdmin should be able to withdraw tokens', async () => {
             const dAppAdminBalanceBeforeWithdraw = await tokenContract.contract.balanceOf(dAppAdmin.signer.address);
-            await escrowDappAdminExecutor.withdrawTokens(tokensToSend, { gasLimit: gasLimit });
+            await escrowDappAdminExecutor.withdrawTokens(tokensToSend, { gasLimit: GAS_LIMIT });
             const dAppAdminBalanceAfterWithdraw = await tokenContract.contract.balanceOf(dAppAdmin.signer.address);
 
             assert(dAppAdminBalanceBeforeWithdraw.add(tokensToSend).eq(dAppAdminBalanceAfterWithdraw), 'Incorrect withdrawn tokens amount');
@@ -313,7 +340,7 @@ describe('Escrow Contract V2', function () {
             const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.signer);
 
             await utils.expectThrow(
-                escrowNonDappAdminExecutor.withdrawEthers(weiToSend, { gasLimit: gasLimit }),
+                escrowNonDappAdminExecutor.withdrawEthers(weiToSend, { gasLimit: GAS_LIMIT }),
                 'Unauthorized access'
             );
         });
@@ -322,20 +349,20 @@ describe('Escrow Contract V2', function () {
             const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.signer);
 
             await utils.expectThrow(
-                escrowNonDappAdminExecutor.withdrawTokens(tokensToSend, { gasLimit: gasLimit }),
+                escrowNonDappAdminExecutor.withdrawTokens(tokensToSend, { gasLimit: GAS_LIMIT }),
                 'Unauthorized access'
             );
         });
 
         it('[NEGATIVE] dAppAdmin should not be able to withdraw more ethers than the contract balance', async () => {
             await utils.expectThrow(
-                escrowDappAdminExecutor.withdrawEthers(weiToSend.mul(3), { gasLimit: gasLimit })
+                escrowDappAdminExecutor.withdrawEthers(weiToSend.mul(3), { gasLimit: GAS_LIMIT })
             );
         });
 
         it('[NEGATIVE] dAppAdmin should not be able to withdraw more tokens than the contract balance', async () => {
             await utils.expectThrow(
-                escrowDappAdminExecutor.withdrawTokens(tokensToSend.mul(3), { gasLimit: gasLimit })
+                escrowDappAdminExecutor.withdrawTokens(tokensToSend.mul(3), { gasLimit: GAS_LIMIT })
             );
         });
     });

@@ -19,8 +19,8 @@ contract Escrow_V3 {
     address payable public dAppAdmin;
     uint256 constant public REFUNDING_LOGIC_GAS_COST = 7901; // gas used for single refund 
 
-    uint256 constant public FIAT_PAYMENT_FUND_FUNCTION_CALL_GAS_USED = 32231; // approximated gas for calling fundForFiatPayment
-    uint256 constant public RELAYED_PAYMENT_FUND_FUNCTION_CALL_GAS_USED = 31723; // approximated gas for calling fundForRelayedPayment
+    uint256 constant public FIAT_PAYMENT_FUND_FUNCTION_CALL_GAS_USED = 32831; // approximated gas for calling fundForFiatPayment
+    uint256 constant public RELAYED_PAYMENT_FUND_FUNCTION_CALL_GAS_USED = 32323; // approximated gas for calling fundForRelayedPayment
 
     /**
     * @dev Restricts the access to a given function to the dApp admin only 
