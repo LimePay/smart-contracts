@@ -1,4 +1,5 @@
 /node_modules
+/coverage-artifacts
 /lab
 /coverage
 package-lock.json
