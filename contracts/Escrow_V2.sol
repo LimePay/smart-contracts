@@ -4,6 +4,9 @@ import "./ECTools.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
+/**
+ * Escrow_V2 is deprecated and currently it is not used in production 
+ */
 contract Escrow_V2 {
     using SafeMath for uint256;
 
