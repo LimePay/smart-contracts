@@ -214,11 +214,16 @@ describe('Escrow Contract', function () {
         });
 
         it('[NEGATIVE] Fund should not be executed if fund and refund sum is bigger than contract balance', async () => {
-
-
             await utils.expectThrow(
                 escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend.mul(3), tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE }),
             );
+        });
+
+        // TODO
+        it('[NEGATIVE] Should not be able to perform transaction with high gas price', async () => {
+            const tx = await escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE * 10 });
+            const result = await tx.wait();
+            console.log(result);
         });
     });
 
