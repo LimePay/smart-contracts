@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 /**
  * @title Escrow_V3
- * @dev Escrow_V3 is the latest version of the escrow contract, currently being used for production 
+ * @dev Escrow_V3 is the latest version of the escrow contract, currently being used for production
  */
 contract Escrow_V3 {
     using SafeMath for uint256;
@@ -17,16 +17,16 @@ contract Escrow_V3 {
     mapping (uint256 => bool) public usedNonces;
 
     address payable public dAppAdmin;
-    uint256 constant public REFUNDING_LOGIC_GAS_COST = 7901; // gas used for single refund 
+    uint256 constant public REFUNDING_LOGIC_GAS_COST = 7901; // gas used for single refund
 
     uint256 constant public FIAT_PAYMENT_FUND_FUNCTION_CALL_GAS_USED = 32831; // approximated gas for calling fundForFiatPayment
     uint256 constant public RELAYED_PAYMENT_FUND_FUNCTION_CALL_GAS_USED = 32323; // approximated gas for calling fundForRelayedPayment
 
     /**
-    * @dev Restricts the access to a given function to the dApp admin only 
+    * @dev Restricts the access to a given function to the dApp admin only
     */
     modifier onlyDAppAdmin() {
-        require(msg.sender == dAppAdmin, "Unauthorized access"); 
+        require(msg.sender == dAppAdmin, "Unauthorized access");
         _;
     }
 
@@ -42,14 +42,14 @@ contract Escrow_V3 {
     * @dev The token address and the dappadmin are set on contract creation
     */
     constructor(address tokenAddress, address payable _dAppAdmin) public {
-        dAppAdmin = _dAppAdmin;   
-        tokenContract = ERC20(tokenAddress); 
+        dAppAdmin = _dAppAdmin;
+        tokenContract = ERC20(tokenAddress);
     }
    
     /**
     * @dev Funds the `addressToFund` with the proided `weiAmount`
     * Signature from the dapp is used in order to authorize the funding
-    * The msg sender is refunded for the transaction costs 
+    * The msg sender is refunded for the transaction costs
     */
     function fundForRelayedPayment(
         uint256 nonce,
@@ -59,7 +59,7 @@ contract Escrow_V3 {
         bytes memory authorizationSignature) public preValidateFund(nonce)
     {
         uint256 gasLimit = gasleft().add(RELAYED_PAYMENT_FUND_FUNCTION_CALL_GAS_USED);
-        
+
         bytes32 hashedParameters = keccak256(abi.encodePacked(nonce, address(this), gasprice, addressToFund, weiAmount));
         _preFund(hashedParameters, authorizationSignature, nonce);
 
@@ -71,7 +71,7 @@ contract Escrow_V3 {
     /**
     * @dev Funds the `addressToFund` with the proided `weiAmount` and `tokenAmount`
     * Signature from the dapp is used in order to authorize the funding
-    * The msg sender is refunded for the transaction costs 
+    * The msg sender is refunded for the transaction costs
     */
     function fundForFiatPayment(
         uint256 nonce,
@@ -98,7 +98,7 @@ contract Escrow_V3 {
     function _preFund(bytes32 hashedParameters, bytes memory authorizationSignature, uint256 nonce) internal {
         address signer = getSigner(hashedParameters, authorizationSignature);
         require(signers[signer], "Invalid authorization signature or signer");
-        
+
         usedNonces[nonce] = true;
     }
 

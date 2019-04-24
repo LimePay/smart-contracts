@@ -100,7 +100,7 @@ describe('Escrow Contract', function () {
             let tx = await escrowSignerExecutor.fundForRelayedPayment(nonce, GAS_PRICE, recipient.address, weiToSend, signedRelayedPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
 
             await validateAfterFund(msgSenderBalanceBeforeFund, tx);
-        }).timeout(100000);
+        });
 
         it('Should process 500 fiat payments and refund correctly', async () => {
             await tokenContract.contract.transfer(escrowContract.contractAddress, tokensToSend.mul(1010));
@@ -112,9 +112,7 @@ describe('Escrow Contract', function () {
             let senderBalanceBeforeFund = await deployer.provider.getBalance(deployer.signer.address);
 
             for (i = 0; i < NUMBER_OF_TRANSACTIONS; i++) {
-                if (i % 2 == 0) {
-                    recipient = await ethers.Wallet.createRandom();
-                }
+                recipient = await ethers.Wallet.createRandom();
                 nonce = await utils.generateRandomNonce();
                 signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner.signer, ['uint256', 'address', 'uint256', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend, tokensToSend]);
                 tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
@@ -137,9 +135,7 @@ describe('Escrow Contract', function () {
 
             const transactions = [];
             for (i = 0; i < NUMBER_OF_TRANSACTIONS; i++) {
-                if (i % 2 == 0) {
-                    recipient = await ethers.Wallet.createRandom();
-                }
+                recipient = await ethers.Wallet.createRandom();
                 let currentNonce = await utils.generateRandomNonce();
 
                 let signedFiatPaymentFunds = await utils.getSignedFundMessage(
@@ -166,15 +162,8 @@ describe('Escrow Contract', function () {
             assert(msgSenderBalanceAfterFund.gte(msgsenderBalanceBeforeFund), 'Incorrect sender wei balance');
             assert.closeTo(0, Number(msgSenderBalanceAfterFund.sub(msgsenderBalanceBeforeFund).div(GAS_PRICE).toString()), EXCESS_GAS_REFUND_UPPER_LIMIT, 'Refund amount is outside the range');
 
-            const escrowWeiBalance = await deployer.provider.getBalance(escrowContract.contractAddress);
-
             const txReceipt = await deployer.provider.getTransactionReceipt(fundTx.hash);
-            const gasUsed = txReceipt.gasUsed;
-            const txGasCost = gasUsed.mul(fundTx.gasPrice);
-            const expectedEscrowWeiBalance = weiToSend.sub(txGasCost.toString());
-
-            const excessGasRefunded = Number(expectedEscrowWeiBalance.sub(escrowWeiBalance).div(GAS_PRICE).toString());
-            assert.closeTo(0, excessGasRefunded, EXCESS_GAS_REFUND_UPPER_LIMIT, 'Incorrect wei balance remaining in the contract');
+            await verifyContractBalanceAfterRefund(deployer, escrowContract, txReceipt, weiToSend);
 
             const recipientWeiBalance = await deployer.provider.getBalance(recipient.address);
             assert(recipientWeiBalance.eq(weiToSend), 'Incorrect wei balance remaining in the recipient');
@@ -219,11 +208,34 @@ describe('Escrow Contract', function () {
             );
         });
 
-        // TODO
-        it('[NEGATIVE] Should not be able to perform transaction with high gas price', async () => {
+        it('Should refund from fiat payment depending on gasPrice argument in authorisation signature', async () => {
+            const msgSenderBalanceBeforeFund = await deployer.provider.getBalance(dAppSigner.signer.address);
+
+            // Broadcast the transaction with x10 Gas Price. Should refund only 1x Gas Price and not 10x 
             const tx = await escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE * 10 });
-            const result = await tx.wait();
-            console.log(result);
+            const txReceipt = await tx.wait();
+
+            const msgSenderBalanceAfterFund = await deployer.provider.getBalance(dAppSigner.signer.address);
+            // msg sender consumed a lot of ether on the fundForFiatPayment transaction, so the balance should be less then the initial balance. The refund must be only for Gas Price and not 10xGas Price
+            assert(msgSenderBalanceBeforeFund.gt(msgSenderBalanceAfterFund), "msg sender was refunded with more than necessary ethers");
+
+            // Verify that the contract paid for refunding 1xGasPrice and not 10x
+            await verifyContractBalanceAfterRefund(deployer, escrowContract, txReceipt, weiToSend);
+        });
+
+        it('Should refund from relayed payment depending on gasPrice argument in authorisation signature', async () => {
+            const msgSenderBalanceBeforeFund = await deployer.provider.getBalance(dAppSigner.signer.address);
+
+            // Broadcast the transaction with x10 Gas Price. Should refund only 1x Gas Price and not 10x 
+            const tx = await escrowSignerExecutor.fundForRelayedPayment(nonce, GAS_PRICE, recipient.address, weiToSend, signedRelayedPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE * 10 });
+            const txReceipt = await tx.wait();
+
+            const msgSenderBalanceAfterFund = await deployer.provider.getBalance(dAppSigner.signer.address);
+            // msg sender consumed a lot of ether on the fundForFiatPayment transaction, so the balance should be less then the initial balance. The refund must be only for Gas Price and not 10xGas Price
+            assert(msgSenderBalanceBeforeFund.gt(msgSenderBalanceAfterFund), "msg sender was refunded with more than necessary ethers");
+
+            // Verify that the contract paid for refunding 1xGasPrice and not 10x
+            await verifyContractBalanceAfterRefund(deployer, escrowContract, txReceipt, weiToSend);
         });
     });
 
@@ -396,3 +408,13 @@ describe('Escrow Contract', function () {
         });
     });
 });
+
+async function verifyContractBalanceAfterRefund(deployer, escrowContract, txReceipt, weiToSend) {
+    const escrowWeiBalance = await deployer.provider.getBalance(escrowContract.contractAddress);
+    const gasUsed = txReceipt.gasUsed;
+    const txGasCost = gasUsed.mul(GAS_PRICE);
+    const expectedEscrowWeiBalance = weiToSend.sub(txGasCost.toString());
+    
+    const excessGasRefunded = Number(expectedEscrowWeiBalance.sub(escrowWeiBalance).div(GAS_PRICE).toString());
+    assert.closeTo(0, excessGasRefunded, EXCESS_GAS_REFUND_UPPER_LIMIT, 'Incorrect wei balance remaining in the contract');
+}
