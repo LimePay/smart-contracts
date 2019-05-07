@@ -33,8 +33,9 @@ contract Escrow_V3 {
     /**
     * @dev Checks whether the nonce in the authorisation signature was already used. Prevents replay attacks.
     */
-    modifier preValidateFund(uint256 nonce) {
+    modifier preValidateFund(uint256 nonce, uint256 gasprice) {
         require(!usedNonces[nonce], "Nonce already used");
+        require(gasprice == tx.gasprice, "Gas price is different from the signed one");
         _;
     }
 
@@ -56,7 +57,7 @@ contract Escrow_V3 {
         uint256 gasprice,
         address payable addressToFund,
         uint256 weiAmount,
-        bytes memory authorizationSignature) public preValidateFund(nonce)
+        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice)
     {
         uint256 gasLimit = gasleft().add(RELAYED_PAYMENT_FUND_FUNCTION_CALL_GAS_USED);
 
@@ -79,7 +80,7 @@ contract Escrow_V3 {
         address payable addressToFund,
         uint256 weiAmount,
         uint256 tokenAmount,
-        bytes memory authorizationSignature) public preValidateFund(nonce)
+        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice)
     {
         uint256 gasLimit = gasleft().add(FIAT_PAYMENT_FUND_FUNCTION_CALL_GAS_USED);
 

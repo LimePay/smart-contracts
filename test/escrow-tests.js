@@ -211,34 +211,20 @@ describe('Escrow Contract', function () {
             );
         });
 
-        it('Should refund from fiat payment depending on gasPrice argument in authorisation signature', async () => {
+        it('Fiat payment should revert if gasprice in authorisation signature is different from tx.gasprice', async () => {
             const msgSenderBalanceBeforeFund = await provider.getBalance(dAppSigner.address);
 
             // Broadcast the transaction with x10 Gas Price. Should refund only 1x Gas Price and not 10x 
-            const tx = await escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE * 10 });
-            const txReceipt = await tx.wait();
-
-            const msgSenderBalanceAfterFund = await provider.getBalance(dAppSigner.address);
-            // msg sender consumed a lot of ether on the fundForFiatPayment transaction, so the balance should be less then the initial balance. The refund must be only for Gas Price and not 10xGas Price
-            assert(msgSenderBalanceBeforeFund.gt(msgSenderBalanceAfterFund), "msg sender was refunded with more than necessary ethers");
-
-            // Verify that the contract paid for refunding 1xGasPrice and not 10x
-            await verifyContractBalanceAfterRefund(txReceipt.gasUsed, weiToSend);
+            const txPromise = escrowSignerExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE * 10 });
+            await utils.expectThrow(txPromise, "Gas price is different from the signed one");
         });
 
-        it('Should refund from relayed payment depending on gasPrice argument in authorisation signature', async () => {
+        it('Relayed payment should revert if gasprice in authorisation signature is different from tx.gasprice', async () => {
             const msgSenderBalanceBeforeFund = await provider.getBalance(dAppSigner.address);
 
             // Broadcast the transaction with x10 Gas Price. Should refund only 1x Gas Price and not 10x 
-            const tx = await escrowSignerExecutor.fundForRelayedPayment(nonce, GAS_PRICE, recipient.address, weiToSend, signedRelayedPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE * 10 });
-            const txReceipt = await tx.wait();
-
-            const msgSenderBalanceAfterFund = await provider.getBalance(dAppSigner.address);
-            // msg sender consumed a lot of ether on the fundForFiatPayment transaction, so the balance should be less then the initial balance. The refund must be only for Gas Price and not 10xGas Price
-            assert(msgSenderBalanceBeforeFund.gt(msgSenderBalanceAfterFund), "msg sender was refunded with more than necessary ethers");
-
-            // Verify that the contract paid for refunding 1xGasPrice and not 10x
-            await verifyContractBalanceAfterRefund(txReceipt.gasUsed, weiToSend);
+            const txPromise = escrowSignerExecutor.fundForRelayedPayment(nonce, GAS_PRICE, recipient.address, weiToSend, signedRelayedPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE * 10 });
+            await utils.expectThrow(txPromise, "Gas price is different from the signed one");
         });
     });
 
