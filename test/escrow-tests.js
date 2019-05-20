@@ -129,7 +129,6 @@ describe('Escrow Contract', function () {
                 nonce = await utils.generateRandomNonce();
                 signedFiatPaymentFunds = await utils.getSignedFundMessage(dAppSigner, ['uint256', 'address', 'uint256', 'address', 'uint256', 'uint256'], [nonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend, tokensToSend]);
                 tx = await escrowFundExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
-                // tx = await escrowDappAdminExecutor.fundForFiatPayment(nonce, GAS_PRICE, recipient.address, weiToSend, tokensToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
             }
 
             let senderBalanceAfterFund = await provider.getBalance(deployer.signer.address);
@@ -158,7 +157,6 @@ describe('Escrow Contract', function () {
                     [currentNonce, escrowContract.contractAddress, GAS_PRICE, recipient.address, weiToSend]);
 
                 tx = await escrowFundExecutor.fundForRelayedPayment(currentNonce, GAS_PRICE, recipient.address, weiToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
-                // tx = await escrowDappAdminExecutor.fundForRelayedPayment(currentNonce, GAS_PRICE, recipient.address, weiToSend, signedFiatPaymentFunds, { gasLimit: GAS_LIMIT, gasPrice: GAS_PRICE });
                 const result = await tx.wait();
                 transactions.push(result);
             }
@@ -218,7 +216,7 @@ describe('Escrow Contract', function () {
             );
         });
 
-        it('[NEGATIVE] Fund should not be executed from non-fund executor address', async () => {
+        it('[NEGATIVE] Fund should not be executed from non fund executor address', async () => {
             nonDappFundExecutor.signer = nonDappFundExecutor.signer.connect(provider);
             const escrowNonFundExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappFundExecutor.signer);
 
@@ -479,7 +477,6 @@ async function verifyContractBalanceAfterRefund(gasUsed, weiToSend) {
     const escrowWeiBalance = await provider.getBalance(escrowContract.contractAddress);
     const txGasCost = gasUsed.mul(GAS_PRICE);
     const expectedEscrowWeiBalance = weiToSend.sub(txGasCost.toString());
-
     const excessGasRefunded = Number(expectedEscrowWeiBalance.sub(escrowWeiBalance).div(GAS_PRICE).toString());
     assert.closeTo(0, excessGasRefunded, EXCESS_GAS_REFUND_UPPER_LIMIT, 'Incorrect wei balance remaining in the contract');
 }
