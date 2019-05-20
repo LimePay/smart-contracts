@@ -14,6 +14,7 @@ contract Escrow_V3 {
     ERC20 public tokenContract;
 
     mapping (address => bool) public signers;
+    mapping (address => bool) public fundExecutors;
     mapping (uint256 => bool) public usedNonces;
 
     address payable public dAppAdmin;
@@ -27,6 +28,14 @@ contract Escrow_V3 {
     */
     modifier onlyDAppAdmin() {
         require(msg.sender == dAppAdmin, "Unauthorized access");
+        _;
+    }
+
+    /**
+    * @dev Restricts the access to a given function to the fund executor only
+    */
+    modifier onlyFundExecutor() {
+        require(fundExecutors[msg.sender], "Unauthorized access");
         _;
     }
 
@@ -57,7 +66,7 @@ contract Escrow_V3 {
         uint256 gasprice,
         address payable addressToFund,
         uint256 weiAmount,
-        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice)
+        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice) onlyFundExecutor()
     {
         uint256 gasLimit = gasleft().add(RELAYED_PAYMENT_FUND_FUNCTION_CALL_GAS_USED);
 
@@ -80,7 +89,7 @@ contract Escrow_V3 {
         address payable addressToFund,
         uint256 weiAmount,
         uint256 tokenAmount,
-        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice)
+        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice) onlyFundExecutor()
     {
         uint256 gasLimit = gasleft().add(FIAT_PAYMENT_FUND_FUNCTION_CALL_GAS_USED);
 
@@ -144,6 +153,13 @@ contract Escrow_V3 {
     */
     function editDappAdmin (address payable _dAppAdmin) public onlyDAppAdmin {
         dAppAdmin = _dAppAdmin;
+    }
+
+    /**
+    * @dev marks a given address as fund executor or not, depending on the second bool parameter. Performed only by the dAppAdmin
+    */
+    function editFundExecutor(address _newExecutor, bool add) public onlyDAppAdmin {
+        fundExecutors[_newExecutor] = add;
     }
 
     function() external payable {}
