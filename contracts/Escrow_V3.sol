@@ -49,7 +49,7 @@ contract Escrow_V3 {
     }
 
     /**
-    * @dev The token address and the dappadmin are set on contract creation
+    * @dev The token address, dappadmin and funding wallets are set on contract deployment. FundExecutors are MAX 5
     */
     constructor(address tokenAddress, address payable _dAppAdmin, address[] memory _fundExecutors) public {
         dAppAdmin = _dAppAdmin;
