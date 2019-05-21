@@ -10,11 +10,12 @@ const GAS_PRICE = 20000000000; // 20 gwei
 const GAS_LIMIT = 200000;
 
 const EXCESS_GAS_REFUND_UPPER_LIMIT = 3500; // The upper limit of exceeding gas that can be refunded and we will count the refund successfull
-const NUMBER_OF_TRANSACTIONS = 500; // Number of transactions that will be perfomed for the refund test
+const NUMBER_OF_TRANSACTIONS = 100; // Number of transactions that will be perfomed for the refund test
 
 let deployer;
 let provider;
 let escrowContract;
+let tokenContract;
 
 describe('Escrow Contract', function () {
     this.timeout(5000);
@@ -37,16 +38,8 @@ describe('Escrow Contract', function () {
     let escrowFundExecutor;
 
     async function initEscrowContract() {
-        deployer = new etherlime.EtherlimeGanacheDeployer(dAppAdmin.signer.privateKey);
-        deployer.defaultOverrides = {
-            gasLimit: 4700000
-        }
-
-        tokenContract = await deployer.deploy(Token);
-
-        const ecToolContract = await deployer.deploy(ECTools);
-
-        escrowContract = await deployer.deploy(EscrowContract, { ECTools: ecToolContract.contractAddress }, tokenContract.contractAddress, dAppAdmin.signer.address);
+        const ecToolContract = await deployRelatedContracts();
+        escrowContract = await deployer.deploy(EscrowContract, { ECTools: ecToolContract.contractAddress }, tokenContract.contractAddress, dAppAdmin.signer.address, [dAppFundExecutor.address]);
         provider = deployer.provider;
 
         dAppAdmin.signer = dAppAdmin.signer.connect(provider);
@@ -70,7 +63,6 @@ describe('Escrow Contract', function () {
     describe('Fund and Refund functionality', () => {
 
         const addSigner = true;
-        const addFundExecutor = true;
         let signedFiatPaymentFunds;
         let signedRelayedPaymentFunds;
 
@@ -82,7 +74,6 @@ describe('Escrow Contract', function () {
             await setupEscrowContract();
 
             await escrowDappAdminExecutor.editSigner(dAppSigner.address, addSigner);
-            await escrowDappAdminExecutor.editFundExecutor(dAppFundExecutor.address, addFundExecutor)
 
             recipient = ethers.Wallet.createRandom();
 
@@ -407,76 +398,100 @@ describe('Escrow Contract', function () {
 
     describe('DAppAdmin functionality', () => {
 
+        let randomAddress;
+        const ADD = true;
+        const REMOVE = false;
+
         beforeEach(async () => {
             await initEscrowContract();
-
-            newDAppAdmin = ethers.Wallet.createRandom();
+            randomAddress = utils.getRandomWallet().address;
             nonSigner.signer = nonSigner.signer.connect(provider);
         });
 
         it('dAppAdmin should be able to set a new dAppAdmin', async () => {
-            await escrowDappAdminExecutor.editDappAdmin(newDAppAdmin.address);
-
+            await escrowDappAdminExecutor.editDappAdmin(randomAddress);
             let newDAppAdminAddress = await escrowDappAdminExecutor.dAppAdmin()
 
-            assert(newDAppAdmin.address == newDAppAdminAddress, "dApp admin hasn't been changed")
+            assert(randomAddress == newDAppAdminAddress, "dApp admin hasn't been changed")
         });
 
         it('Non dAppAdmin shouldn\'t be able to set a new dAppAdmin', async () => {
             await utils.expectThrow(
-                escrowSignerExecutor.editDappAdmin(newDAppAdmin.address)
+                escrowSignerExecutor.editDappAdmin(randomAddress)
             );
-        });
-    });
-
-    describe('FundExecutor functionality', () => {
-
-        let newFundExecutor;
-        const addFundExecutor = true;
-        const removeFundExecutor = false;
-
-        beforeEach(async () => {
-            await initEscrowContract();
-
-            newFundExecutor = ethers.Wallet.createRandom();
-            newFundExecutor = newFundExecutor.connect(provider);
-
-            nonDappAdmin.signer = nonDappAdmin.signer.connect(provider);
         });
 
         it('dAppAdmin should be able to make other addresses fund executors', async () => {
-            await escrowDappAdminExecutor.editFundExecutor(newFundExecutor.address, addFundExecutor, { gasLimit: GAS_LIMIT });
-            assert(await escrowDappAdminExecutor.fundExecutors(newFundExecutor.address), 'New fund executor is not added');
+            await escrowDappAdminExecutor.editFundExecutor(randomAddress, ADD, { gasLimit: GAS_LIMIT });
+            assert(await escrowDappAdminExecutor.fundExecutors(randomAddress), 'New fund executor is not added');
         });
 
         it('dAppAdmin should be able to remove fund executor privilege from other addresses', async () => {
-            await escrowDappAdminExecutor.editFundExecutor(newFundExecutor.address, addFundExecutor, { gasLimit: GAS_LIMIT });
-            assert(await escrowDappAdminExecutor.fundExecutors(newFundExecutor.address), 'New fund executor is not added');
+            await escrowDappAdminExecutor.editFundExecutor(randomAddress, ADD, { gasLimit: GAS_LIMIT });
+            assert(await escrowDappAdminExecutor.fundExecutors(randomAddress), 'New fund executor is not added');
 
-            await escrowDappAdminExecutor.editFundExecutor(newFundExecutor.address, removeFundExecutor, { gasLimit: GAS_LIMIT });
-            assert(!await escrowDappAdminExecutor.fundExecutors(newFundExecutor.address), 'Added fund executor has not been removed');
+            await escrowDappAdminExecutor.editFundExecutor(randomAddress, REMOVE, { gasLimit: GAS_LIMIT });
+            assert(!await escrowDappAdminExecutor.fundExecutors(randomAddress), 'Added fund executor has not been removed');
         });
 
         it('[NEGATIVE] Non-dAppAdmin address should not be able to add or remove another fund executor privilege', async () => {
             const escrowNonDappAdminExecutor = new ethers.Contract(escrowContract.contractAddress, EscrowContract.abi, nonDappAdmin.signer);
 
             await utils.expectThrow(
-                escrowNonDappAdminExecutor.editFundExecutor(newFundExecutor.address, addFundExecutor, { gasLimit: GAS_LIMIT }),
+                escrowNonDappAdminExecutor.editFundExecutor(randomAddress, ADD, { gasLimit: GAS_LIMIT }),
                 'Unauthorized access'
             );
 
             await utils.expectThrow(
-                escrowNonDappAdminExecutor.editFundExecutor(newFundExecutor.address, removeFundExecutor, { gasLimit: GAS_LIMIT }),
+                escrowNonDappAdminExecutor.editFundExecutor(randomAddress, REMOVE, { gasLimit: GAS_LIMIT }),
                 'Unauthorized access'
             );
         });
     });
+
+    describe('FundExecutor functionality', () => {
+
+        let ecToolContract;
+
+        beforeEach(async () => {
+            ecToolContract = await deployRelatedContracts();
+        });
+
+        it('Should set funder addresses on deploy', async () => {
+            const randomAddress1 = utils.getRandomWallet().address;
+            const randomAddress2 = utils.getRandomWallet().address;
+            const randomAddress3 = utils.getRandomWallet().address;
+
+            escrowContract = await deployer.deploy(EscrowContract, { ECTools: ecToolContract.contractAddress }, tokenContract.contractAddress, dAppAdmin.signer.address, [randomAddress1, randomAddress2, randomAddress3]);
+            
+            assert(await escrowContract.fundExecutors(randomAddress1), "RandomAddress1 was not set as funding wallet on deploy");
+            assert(await escrowContract.fundExecutors(randomAddress2), "RandomAddress2 was not set as funding wallet on deploy");
+            assert(await escrowContract.fundExecutors(randomAddress3), "RandomAddress3 was not set as funding wallet on deploy");
+
+            const randomAddress4 = utils.getRandomWallet().address;
+            assert(await escrowContract.fundExecutors(randomAddress4) == false, "RandomAddress4 is funding wallet out of the box");
+        })
+
+    });
+
+
+    async function deployRelatedContracts() {
+        deployer = new etherlime.EtherlimeGanacheDeployer(dAppAdmin.signer.privateKey);
+        deployer.defaultOverrides = {
+            gasLimit: 4700000
+        };
+        tokenContract = await deployer.deploy(Token);
+        const ecToolContract = await deployer.deploy(ECTools);
+        return ecToolContract;
+    }
+
+    async function verifyContractBalanceAfterRefund(gasUsed, weiToSend) {
+        const escrowWeiBalance = await provider.getBalance(escrowContract.contractAddress);
+        const txGasCost = gasUsed.mul(GAS_PRICE);
+        const expectedEscrowWeiBalance = weiToSend.sub(txGasCost.toString());
+        const excessGasRefunded = Number(expectedEscrowWeiBalance.sub(escrowWeiBalance).div(GAS_PRICE).toString());
+        assert.closeTo(0, excessGasRefunded, EXCESS_GAS_REFUND_UPPER_LIMIT, 'Incorrect wei balance remaining in the contract');
+    }
 });
 
-async function verifyContractBalanceAfterRefund(gasUsed, weiToSend) {
-    const escrowWeiBalance = await provider.getBalance(escrowContract.contractAddress);
-    const txGasCost = gasUsed.mul(GAS_PRICE);
-    const expectedEscrowWeiBalance = weiToSend.sub(txGasCost.toString());
-    const excessGasRefunded = Number(expectedEscrowWeiBalance.sub(escrowWeiBalance).div(GAS_PRICE).toString());
-    assert.closeTo(0, excessGasRefunded, EXCESS_GAS_REFUND_UPPER_LIMIT, 'Incorrect wei balance remaining in the contract');
-}
+

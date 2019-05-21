@@ -32,6 +32,9 @@ const util = {
 		} catch (error) {
 			assert.fail('Transaction reverted')
 		}
+	},
+	getRandomWallet: () => {
+		return ethers.Wallet.createRandom();
 	}
 }
 

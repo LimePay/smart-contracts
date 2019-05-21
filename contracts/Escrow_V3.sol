@@ -51,9 +51,12 @@ contract Escrow_V3 {
     /**
     * @dev The token address and the dappadmin are set on contract creation
     */
-    constructor(address tokenAddress, address payable _dAppAdmin) public {
+    constructor(address tokenAddress, address payable _dAppAdmin, address[] memory _fundExecutors) public {
         dAppAdmin = _dAppAdmin;
         tokenContract = ERC20(tokenAddress);
+        for (uint i = 0; i < _fundExecutors.length; i++) {
+            fundExecutors[_fundExecutors[i]] = true;
+        }
     }
    
     /**
