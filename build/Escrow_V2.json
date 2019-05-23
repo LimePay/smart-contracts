@@ -312,7 +312,7 @@
         "id": 109,
         "nodeType": "ImportDirective",
         "scope": 432,
-        "sourceUnit": 941,
+        "sourceUnit": 1001,
         "src": "48:59:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -323,7 +323,7 @@
         "id": 110,
         "nodeType": "ImportDirective",
         "scope": 432,
-        "sourceUnit": 1373,
+        "sourceUnit": 1433,
         "src": "108:63:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -348,10 +348,10 @@
               "id": 111,
               "name": "SafeMath",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 940,
+              "referencedDeclaration": 1000,
               "src": "283:8:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_SafeMath_$940",
+                "typeIdentifier": "t_contract$_SafeMath_$1000",
                 "typeString": "library SafeMath"
               }
             },
@@ -378,7 +378,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_ERC20_$1372",
+              "typeIdentifier": "t_contract$_ERC20_$1432",
               "typeString": "contract ERC20"
             },
             "typeName": {
@@ -386,10 +386,10 @@
               "id": 114,
               "name": "ERC20",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 1372,
+              "referencedDeclaration": 1432,
               "src": "310:5:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_ERC20_$1372",
+                "typeIdentifier": "t_contract$_ERC20_$1432",
                 "typeString": "contract ERC20"
               }
             },
@@ -671,7 +671,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1514,
+                            "referencedDeclaration": 1574,
                             "src": "862:3:1",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -747,10 +747,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1517,
-                        1518
+                        1577,
+                        1578
                       ],
-                      "referencedDeclaration": 1518,
+                      "referencedDeclaration": 1578,
                       "src": "854:7:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
@@ -895,10 +895,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1517,
-                        1518
+                        1577,
+                        1578
                       ],
-                      "referencedDeclaration": 1518,
+                      "referencedDeclaration": 1578,
                       "src": "984:7:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
@@ -1039,7 +1039,7 @@
                       "referencedDeclaration": 115,
                       "src": "1171:13:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ERC20_$1372",
+                        "typeIdentifier": "t_contract$_ERC20_$1432",
                         "typeString": "contract ERC20"
                       }
                     },
@@ -1073,10 +1073,10 @@
                         "name": "ERC20",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 1372,
+                        "referencedDeclaration": 1432,
                         "src": "1187:5:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_ERC20_$1372_$",
+                          "typeIdentifier": "t_type$_t_contract$_ERC20_$1432_$",
                           "typeString": "type(contract ERC20)"
                         }
                       },
@@ -1090,13 +1090,13 @@
                       "nodeType": "FunctionCall",
                       "src": "1187:19:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ERC20_$1372",
+                        "typeIdentifier": "t_contract$_ERC20_$1432",
                         "typeString": "contract ERC20"
                       }
                     },
                     "src": "1171:35:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ERC20_$1372",
+                      "typeIdentifier": "t_contract$_ERC20_$1432",
                       "typeString": "contract ERC20"
                     }
                   },
@@ -1258,7 +1258,7 @@
                           "name": "gasleft",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 1507,
+                          "referencedDeclaration": 1567,
                           "src": "1423:7:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_gasleft_view$__$returns$_t_uint256_$",
@@ -1286,7 +1286,7 @@
                       "lValueRequested": false,
                       "memberName": "add",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 919,
+                      "referencedDeclaration": 979,
                       "src": "1423:13:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -1371,7 +1371,7 @@
                                 "name": "this",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 1535,
+                                "referencedDeclaration": 1595,
                                 "src": "1569:4:1",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_contract$_Escrow_V2_$431",
@@ -1465,7 +1465,7 @@
                             "name": "abi",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1501,
+                            "referencedDeclaration": 1561,
                             "src": "1537:3:1",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_abi",
@@ -1512,7 +1512,7 @@
                       "name": "keccak256",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1508,
+                      "referencedDeclaration": 1568,
                       "src": "1527:9:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
@@ -1987,7 +1987,7 @@
                           "name": "gasleft",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 1507,
+                          "referencedDeclaration": 1567,
                           "src": "1981:7:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_gasleft_view$__$returns$_t_uint256_$",
@@ -2015,7 +2015,7 @@
                       "lValueRequested": false,
                       "memberName": "add",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 919,
+                      "referencedDeclaration": 979,
                       "src": "1981:13:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -2100,7 +2100,7 @@
                                 "name": "this",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 1535,
+                                "referencedDeclaration": 1595,
                                 "src": "2116:4:1",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_contract$_Escrow_V2_$431",
@@ -2211,7 +2211,7 @@
                             "name": "abi",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1501,
+                            "referencedDeclaration": 1561,
                             "src": "2084:3:1",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_abi",
@@ -2258,7 +2258,7 @@
                       "name": "keccak256",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1508,
+                      "referencedDeclaration": 1568,
                       "src": "2074:9:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
@@ -2421,7 +2421,7 @@
                         "referencedDeclaration": 115,
                         "src": "2240:13:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ERC20_$1372",
+                          "typeIdentifier": "t_contract$_ERC20_$1432",
                           "typeString": "contract ERC20"
                         }
                       },
@@ -2432,7 +2432,7 @@
                       "lValueRequested": false,
                       "memberName": "transfer",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 1016,
+                      "referencedDeclaration": 1076,
                       "src": "2240:22:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$_t_bool_$",
@@ -2961,10 +2961,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1517,
-                        1518
+                        1577,
+                        1578
                       ],
-                      "referencedDeclaration": 1518,
+                      "referencedDeclaration": 1578,
                       "src": "2576:7:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
@@ -3425,7 +3425,7 @@
                           "name": "tx",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 1526,
+                          "referencedDeclaration": 1586,
                           "src": "2994:2:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_transaction",
@@ -3490,7 +3490,7 @@
                                   "name": "gasleft",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 1507,
+                                  "referencedDeclaration": 1567,
                                   "src": "2949:7:1",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_function_gasleft_view$__$returns$_t_uint256_$",
@@ -3539,7 +3539,7 @@
                               "lValueRequested": false,
                               "memberName": "sub",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 895,
+                              "referencedDeclaration": 955,
                               "src": "2936:12:1",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -3567,7 +3567,7 @@
                           "lValueRequested": false,
                           "memberName": "add",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 919,
+                          "referencedDeclaration": 979,
                           "src": "2936:27:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -3595,7 +3595,7 @@
                       "lValueRequested": false,
                       "memberName": "mul",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 847,
+                      "referencedDeclaration": 907,
                       "src": "2936:57:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -3652,7 +3652,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 1514,
+                          "referencedDeclaration": 1574,
                           "src": "3016:3:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -3966,7 +3966,7 @@
                         "referencedDeclaration": 115,
                         "src": "3261:13:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ERC20_$1372",
+                          "typeIdentifier": "t_contract$_ERC20_$1432",
                           "typeString": "contract ERC20"
                         }
                       },
@@ -3977,7 +3977,7 @@
                       "lValueRequested": false,
                       "memberName": "transfer",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 1016,
+                      "referencedDeclaration": 1076,
                       "src": "3261:22:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$_t_bool_$",
@@ -4459,7 +4459,7 @@
         "id": 109,
         "nodeType": "ImportDirective",
         "scope": 432,
-        "sourceUnit": 941,
+        "sourceUnit": 1001,
         "src": "48:59:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -4470,7 +4470,7 @@
         "id": 110,
         "nodeType": "ImportDirective",
         "scope": 432,
-        "sourceUnit": 1373,
+        "sourceUnit": 1433,
         "src": "108:63:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -4495,10 +4495,10 @@
               "id": 111,
               "name": "SafeMath",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 940,
+              "referencedDeclaration": 1000,
               "src": "283:8:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_SafeMath_$940",
+                "typeIdentifier": "t_contract$_SafeMath_$1000",
                 "typeString": "library SafeMath"
               }
             },
@@ -4525,7 +4525,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_ERC20_$1372",
+              "typeIdentifier": "t_contract$_ERC20_$1432",
               "typeString": "contract ERC20"
             },
             "typeName": {
@@ -4533,10 +4533,10 @@
               "id": 114,
               "name": "ERC20",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 1372,
+              "referencedDeclaration": 1432,
               "src": "310:5:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_ERC20_$1372",
+                "typeIdentifier": "t_contract$_ERC20_$1432",
                 "typeString": "contract ERC20"
               }
             },
@@ -4818,7 +4818,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1514,
+                            "referencedDeclaration": 1574,
                             "src": "862:3:1",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -4894,10 +4894,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1517,
-                        1518
+                        1577,
+                        1578
                       ],
-                      "referencedDeclaration": 1518,
+                      "referencedDeclaration": 1578,
                       "src": "854:7:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
@@ -5042,10 +5042,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1517,
-                        1518
+                        1577,
+                        1578
                       ],
-                      "referencedDeclaration": 1518,
+                      "referencedDeclaration": 1578,
                       "src": "984:7:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
@@ -5186,7 +5186,7 @@
                       "referencedDeclaration": 115,
                       "src": "1171:13:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ERC20_$1372",
+                        "typeIdentifier": "t_contract$_ERC20_$1432",
                         "typeString": "contract ERC20"
                       }
                     },
@@ -5220,10 +5220,10 @@
                         "name": "ERC20",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 1372,
+                        "referencedDeclaration": 1432,
                         "src": "1187:5:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_ERC20_$1372_$",
+                          "typeIdentifier": "t_type$_t_contract$_ERC20_$1432_$",
                           "typeString": "type(contract ERC20)"
                         }
                       },
@@ -5237,13 +5237,13 @@
                       "nodeType": "FunctionCall",
                       "src": "1187:19:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ERC20_$1372",
+                        "typeIdentifier": "t_contract$_ERC20_$1432",
                         "typeString": "contract ERC20"
                       }
                     },
                     "src": "1171:35:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ERC20_$1372",
+                      "typeIdentifier": "t_contract$_ERC20_$1432",
                       "typeString": "contract ERC20"
                     }
                   },
@@ -5405,7 +5405,7 @@
                           "name": "gasleft",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 1507,
+                          "referencedDeclaration": 1567,
                           "src": "1423:7:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_gasleft_view$__$returns$_t_uint256_$",
@@ -5433,7 +5433,7 @@
                       "lValueRequested": false,
                       "memberName": "add",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 919,
+                      "referencedDeclaration": 979,
                       "src": "1423:13:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -5518,7 +5518,7 @@
                                 "name": "this",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 1535,
+                                "referencedDeclaration": 1595,
                                 "src": "1569:4:1",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_contract$_Escrow_V2_$431",
@@ -5612,7 +5612,7 @@
                             "name": "abi",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1501,
+                            "referencedDeclaration": 1561,
                             "src": "1537:3:1",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_abi",
@@ -5659,7 +5659,7 @@
                       "name": "keccak256",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1508,
+                      "referencedDeclaration": 1568,
                       "src": "1527:9:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
@@ -6134,7 +6134,7 @@
                           "name": "gasleft",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 1507,
+                          "referencedDeclaration": 1567,
                           "src": "1981:7:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_gasleft_view$__$returns$_t_uint256_$",
@@ -6162,7 +6162,7 @@
                       "lValueRequested": false,
                       "memberName": "add",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 919,
+                      "referencedDeclaration": 979,
                       "src": "1981:13:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -6247,7 +6247,7 @@
                                 "name": "this",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 1535,
+                                "referencedDeclaration": 1595,
                                 "src": "2116:4:1",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_contract$_Escrow_V2_$431",
@@ -6358,7 +6358,7 @@
                             "name": "abi",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1501,
+                            "referencedDeclaration": 1561,
                             "src": "2084:3:1",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_abi",
@@ -6405,7 +6405,7 @@
                       "name": "keccak256",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1508,
+                      "referencedDeclaration": 1568,
                       "src": "2074:9:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
@@ -6568,7 +6568,7 @@
                         "referencedDeclaration": 115,
                         "src": "2240:13:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ERC20_$1372",
+                          "typeIdentifier": "t_contract$_ERC20_$1432",
                           "typeString": "contract ERC20"
                         }
                       },
@@ -6579,7 +6579,7 @@
                       "lValueRequested": false,
                       "memberName": "transfer",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 1016,
+                      "referencedDeclaration": 1076,
                       "src": "2240:22:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$_t_bool_$",
@@ -7108,10 +7108,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1517,
-                        1518
+                        1577,
+                        1578
                       ],
-                      "referencedDeclaration": 1518,
+                      "referencedDeclaration": 1578,
                       "src": "2576:7:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
@@ -7572,7 +7572,7 @@
                           "name": "tx",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 1526,
+                          "referencedDeclaration": 1586,
                           "src": "2994:2:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_transaction",
@@ -7637,7 +7637,7 @@
                                   "name": "gasleft",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 1507,
+                                  "referencedDeclaration": 1567,
                                   "src": "2949:7:1",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_function_gasleft_view$__$returns$_t_uint256_$",
@@ -7686,7 +7686,7 @@
                               "lValueRequested": false,
                               "memberName": "sub",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 895,
+                              "referencedDeclaration": 955,
                               "src": "2936:12:1",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -7714,7 +7714,7 @@
                           "lValueRequested": false,
                           "memberName": "add",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 919,
+                          "referencedDeclaration": 979,
                           "src": "2936:27:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -7742,7 +7742,7 @@
                       "lValueRequested": false,
                       "memberName": "mul",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 847,
+                      "referencedDeclaration": 907,
                       "src": "2936:57:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$bound_to$_t_uint256_$",
@@ -7799,7 +7799,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 1514,
+                          "referencedDeclaration": 1574,
                           "src": "3016:3:1",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -8113,7 +8113,7 @@
                         "referencedDeclaration": 115,
                         "src": "3261:13:1",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ERC20_$1372",
+                          "typeIdentifier": "t_contract$_ERC20_$1432",
                           "typeString": "contract ERC20"
                         }
                       },
@@ -8124,7 +8124,7 @@
                       "lValueRequested": false,
                       "memberName": "transfer",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 1016,
+                      "referencedDeclaration": 1076,
                       "src": "3261:22:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$_t_bool_$",
@@ -8574,6 +8574,6 @@
     "version": "0.5.1+commit.c8a2cb62.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "1.1.0",
-  "updatedAt": "2019-05-07T13:40:54.786Z"
+  "schemaVersion": "1.1.1",
+  "updatedAt": "2019-05-21T07:52:39.666Z"
 }

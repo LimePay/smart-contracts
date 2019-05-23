@@ -14,6 +14,7 @@ contract Escrow_V3 {
     ERC20 public tokenContract;
 
     mapping (address => bool) public signers;
+    mapping (address => bool) public fundExecutors;
     mapping (uint256 => bool) public usedNonces;
 
     address payable public dAppAdmin;
@@ -31,6 +32,14 @@ contract Escrow_V3 {
     }
 
     /**
+    * @dev Restricts the access to a given function to the fund executor only
+    */
+    modifier onlyFundExecutor() {
+        require(fundExecutors[msg.sender], "Unauthorized access");
+        _;
+    }
+
+    /**
     * @dev Checks whether the nonce in the authorisation signature was already used. Prevents replay attacks.
     */
     modifier preValidateFund(uint256 nonce, uint256 gasprice) {
@@ -40,11 +49,14 @@ contract Escrow_V3 {
     }
 
     /**
-    * @dev The token address and the dappadmin are set on contract creation
+    * @dev The token address, dappadmin and funding wallets are set on contract deployment. FundExecutors are MAX 5
     */
-    constructor(address tokenAddress, address payable _dAppAdmin) public {
+    constructor(address tokenAddress, address payable _dAppAdmin, address[] memory _fundExecutors) public {
         dAppAdmin = _dAppAdmin;
         tokenContract = ERC20(tokenAddress);
+        for (uint i = 0; i < _fundExecutors.length; i++) {
+            fundExecutors[_fundExecutors[i]] = true;
+        }
     }
    
     /**
@@ -57,7 +69,7 @@ contract Escrow_V3 {
         uint256 gasprice,
         address payable addressToFund,
         uint256 weiAmount,
-        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice)
+        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice) onlyFundExecutor()
     {
         uint256 gasLimit = gasleft().add(RELAYED_PAYMENT_FUND_FUNCTION_CALL_GAS_USED);
 
@@ -80,7 +92,7 @@ contract Escrow_V3 {
         address payable addressToFund,
         uint256 weiAmount,
         uint256 tokenAmount,
-        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice)
+        bytes memory authorizationSignature) public preValidateFund(nonce, gasprice) onlyFundExecutor()
     {
         uint256 gasLimit = gasleft().add(FIAT_PAYMENT_FUND_FUNCTION_CALL_GAS_USED);
 
@@ -144,6 +156,13 @@ contract Escrow_V3 {
     */
     function editDappAdmin (address payable _dAppAdmin) public onlyDAppAdmin {
         dAppAdmin = _dAppAdmin;
+    }
+
+    /**
+    * @dev marks a given address as fund executor or not, depending on the second bool parameter. Performed only by the dAppAdmin
+    */
+    function editFundExecutor(address _newExecutor, bool add) public onlyDAppAdmin {
+        fundExecutors[_newExecutor] = add;
     }
 
     function() external payable {}
